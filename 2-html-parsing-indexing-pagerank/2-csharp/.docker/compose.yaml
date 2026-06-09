@@ -1,0 +1,39 @@
+name: html-parsing-pagerank-csharp
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: html-parsing-pagerank-csharp-postgres
+    environment:
+      POSTGRES_USER: indexer
+      POSTGRES_PASSWORD: indexer
+      POSTGRES_DB: indexer
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U indexer -d indexer"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks:
+      - indexer-network
+
+  indexer-service:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+    container_name: html-parsing-pagerank-csharp-service
+    environment:
+      PORT: 3000
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=indexer;Username=indexer;Password=indexer
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - indexer-network
+
+networks:
+  indexer-network:
+    driver: bridge

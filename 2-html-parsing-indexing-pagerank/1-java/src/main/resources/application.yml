@@ -1,0 +1,18 @@
+server:
+  port: ${PORT:3000}
+  # Allow %2F (%2f) and %3A in path variables so URL-encoded URLs like
+  # GET /api/indexer/rank/https%3A%2F%2Fexample.com%2Fpage are accepted.
+  tomcat:
+    relaxed-path-chars: "%,/"
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/indexer}
+    username: ${SPRING_DATASOURCE_USERNAME:indexer}
+    password: ${SPRING_DATASOURCE_PASSWORD:indexer}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

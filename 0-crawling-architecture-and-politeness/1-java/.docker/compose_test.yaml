@@ -1,0 +1,59 @@
+name: crawler-politeness-java-test
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crawler-politeness-java-test-postgres
+    environment:
+      POSTGRES_USER: crawler
+      POSTGRES_PASSWORD: crawler
+      POSTGRES_DB: crawler
+    ports:
+      - "15433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crawler -d crawler"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks:
+      - crawler-java-test-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: crawler-politeness-java-test-redis
+    ports:
+      - "16380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks:
+      - crawler-java-test-network
+
+  crawler-service:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+    container_name: crawler-politeness-java-test-service
+    environment:
+      PORT: 3000
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_DB: crawler
+      PG_USER: crawler
+      PG_PASSWORD: crawler
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "13001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - crawler-java-test-network
+
+networks:
+  crawler-java-test-network:
+    driver: bridge

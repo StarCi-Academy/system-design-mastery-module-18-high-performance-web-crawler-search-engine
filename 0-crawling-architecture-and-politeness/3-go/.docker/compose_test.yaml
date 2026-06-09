@@ -1,0 +1,55 @@
+name: crawler-politeness-go-test
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crawler-politeness-go-test-postgres
+    environment:
+      POSTGRES_USER: crawler
+      POSTGRES_PASSWORD: crawler
+      POSTGRES_DB: crawler
+    ports:
+      - "15435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crawler -d crawler"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks:
+      - crawler-go-test-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: crawler-politeness-go-test-redis
+    ports:
+      - "16382:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks:
+      - crawler-go-test-network
+
+  crawler-service:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+    container_name: crawler-politeness-go-test-service
+    environment:
+      PORT: 3000
+      POSTGRES_URL: postgres://crawler:crawler@postgres:5432/crawler
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "13003:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - crawler-go-test-network
+
+networks:
+  crawler-go-test-network:
+    driver: bridge
